@@ -301,9 +301,8 @@ async function handleSubscriptionDeleted(supabase: any, subscription: Stripe.Sub
 
   // Do NOT delete user data. Downgrade to free at period end.
   // The current_period_end from Stripe tells us when access should actually expire.
-  const periodEnd = subscription.current_period_end
-    ? new Date(subscription.current_period_end * 1000).toISOString()
-    : null;
+  const period = getSubscriptionPeriod(subscription);
+  const periodEnd = period.end ? new Date(period.end * 1000).toISOString() : null;
 
   // Find the free plan to downgrade to
   const { data: freePlan } = await supabase
