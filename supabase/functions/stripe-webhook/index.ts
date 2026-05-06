@@ -269,11 +269,12 @@ async function handleSubscriptionUpdated(supabase: any, subscription: Stripe.Sub
     .eq("stripe_price_id", priceId)
     .maybeSingle();
 
+  const period = getSubscriptionPeriod(subscription);
   // deno-lint-ignore no-explicit-any
   const updateData: Record<string, any> = {
     status: mapStripeStatus(subscription.status),
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    current_period_start: period.start ? new Date(period.start * 1000).toISOString() : null,
+    current_period_end: period.end ? new Date(period.end * 1000).toISOString() : null,
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
