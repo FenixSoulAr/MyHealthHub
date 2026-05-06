@@ -337,10 +337,19 @@ export default function Pricing() {
                 <div className="rounded-b-xl border border-t-0 border-border/60 bg-card p-3 text-center">
                   {isPro ? (
                     <Button variant="outline" size="sm" className="w-full text-xs" disabled>{t.youreOnThisPlan}</Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { isAndroidNative ? startGooglePlayPurchase(proPlanCode) : startCheckout(proPlanCode); }} disabled={checkoutLoading}>
+                  ) : isAndroidNative ? (
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startGooglePlayPurchase(proPlanCode)} disabled={checkoutLoading}>
                       {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPro}
                     </Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startPayPalCheckout(proPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPro}
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startStripeCheckout(proPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.payWithCard}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </td>
