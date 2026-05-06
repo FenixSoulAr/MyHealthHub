@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useEntitlementsContext } from "@/contexts/EntitlementsContext";
 import { getLanguage } from "@/i18n";
 import { usePayPalCheckout } from "@/hooks/usePayPalCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useDowngradePlan } from "@/hooks/useDowngradePlan";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useGooglePlayCheckout } from "@/hooks/useGooglePlayCheckout";
@@ -54,9 +55,10 @@ function FeatureRow({ label, free, plus, pro, plusHighlight, proHighlight }: {
 
 export default function Pricing() {
   const { isPlus, isPro } = useEntitlementsContext();
-  const { startCheckout, loading: stripeLoading } = usePayPalCheckout();
+  const { startCheckout: startPayPalCheckout, loading: paypalLoading } = usePayPalCheckout();
+  const { startCheckout: startStripeCheckout, loading: stripeLoading } = useStripeCheckout();
   const { startGooglePlayPurchase, loading: gplayLoading } = useGooglePlayCheckout();
-  const checkoutLoading = stripeLoading || gplayLoading;
+  const checkoutLoading = paypalLoading || stripeLoading || gplayLoading;
   const { schedulePlanChange, loading: downgradeLoading } = useDowngradePlan();
   const lang = getLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -98,6 +100,7 @@ export default function Pricing() {
     youreOnThisPlan:lang === "es" ? "Estás en este plan"   : "You're on this plan",
     upgradeToPlus:  lang === "es" ? "Elegir Plus"          : "Get Plus",
     upgradeToPro:   lang === "es" ? "Elegir Pro"           : "Get Pro",
+    payWithCard:    lang === "es" ? "Pagar con tarjeta"    : "Pay with card",
     perMonth:       lang === "es" ? "/mes"                 : "/month",
     perYear:        lang === "es" ? "/año"                 : "/year",
     forever:        lang === "es" ? "/siempre"             : "/forever",
@@ -313,10 +316,19 @@ export default function Pricing() {
                         <AlertDialogFooter><AlertDialogCancel>{t.cancelBtn}</AlertDialogCancel><AlertDialogAction onClick={() => schedulePlanChange(plusPlanCode)}>{t.confirmBtn}</AlertDialogAction></AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  ) : (
-                    <Button size="sm" className="w-full text-xs" onClick={() => { isAndroidNative ? startGooglePlayPurchase(plusPlanCode, (!isYearly && isFree) ? "plus-50off-3meses" : undefined) : startCheckout(plusPlanCode); }} disabled={checkoutLoading}>
+                  ) : isAndroidNative ? (
+                    <Button size="sm" className="w-full text-xs" onClick={() => { startGooglePlayPurchase(plusPlanCode, (!isYearly && isFree) ? "plus-50off-3meses" : undefined); }} disabled={checkoutLoading}>
                       {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPlus}
                     </Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button size="sm" className="w-full text-xs" onClick={() => startPayPalCheckout(plusPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPlus}
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startStripeCheckout(plusPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.payWithCard}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </td>
@@ -325,10 +337,19 @@ export default function Pricing() {
                 <div className="rounded-b-xl border border-t-0 border-border/60 bg-card p-3 text-center">
                   {isPro ? (
                     <Button variant="outline" size="sm" className="w-full text-xs" disabled>{t.youreOnThisPlan}</Button>
-                  ) : (
-                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => { isAndroidNative ? startGooglePlayPurchase(proPlanCode) : startCheckout(proPlanCode); }} disabled={checkoutLoading}>
+                  ) : isAndroidNative ? (
+                    <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startGooglePlayPurchase(proPlanCode)} disabled={checkoutLoading}>
                       {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPro}
                     </Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startPayPalCheckout(proPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPro}
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startStripeCheckout(proPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.payWithCard}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </td>
@@ -342,7 +363,7 @@ export default function Pricing() {
         <p className="text-sm text-muted-foreground text-center">
           {isAndroidNative
             ? (lang === "es" ? "🛒 Compra segura a través de Google Play. Cancelá en cualquier momento." : "🛒 Secure purchase via Google Play. Cancel anytime.")
-            : (lang === "es" ? "💳 Pagos seguros con PayPal. Cancelá en cualquier momento." : "💳 Secure payments via PayPal. Cancel anytime.")}
+            : (lang === "es" ? "💳 Pagos seguros con PayPal o tarjeta de crédito. Cancelá en cualquier momento." : "💳 Secure payments via PayPal or credit card. Cancel anytime.")}
         </p>
       </div>
     </div>
