@@ -363,7 +363,7 @@ export default function Pricing() {
         <p className="text-sm text-muted-foreground text-center">
           {isAndroidNative
             ? (lang === "es" ? "🛒 Compra segura a través de Google Play. Cancelá en cualquier momento." : "🛒 Secure purchase via Google Play. Cancel anytime.")
-            : (lang === "es" ? "💳 Pagos seguros con PayPal. Cancelá en cualquier momento." : "💳 Secure payments via PayPal. Cancel anytime.")}
+            : (lang === "es" ? "💳 Pagos seguros con PayPal o tarjeta de crédito. Cancelá en cualquier momento." : "💳 Secure payments via PayPal or credit card. Cancel anytime.")}
         </p>
       </div>
     </div>
