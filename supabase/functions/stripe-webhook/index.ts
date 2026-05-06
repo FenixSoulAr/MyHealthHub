@@ -198,9 +198,10 @@ async function handleCheckoutCompleted(stripe: Stripe, supabase: any, session: S
 
   // Get subscription details from Stripe
   const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  const period = getSubscriptionPeriod(subscription);
   logStep("Retrieved Stripe subscription", { 
     status: subscription.status,
-    currentPeriodEnd: subscription.current_period_end
+    currentPeriodEnd: period.end
   });
 
   // Build subscription data
@@ -211,11 +212,15 @@ async function handleCheckoutCompleted(stripe: Stripe, supabase: any, session: S
     provider: "stripe",
     stripe_customer_id: session.customer as string,
     stripe_subscription_id: stripeSubscriptionId,
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    current_period_start: period.start ? new Date(period.start * 1000).toISOString() : null,
+    current_period_end: period.end ? new Date(period.end * 1000).toISOString() : null,
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
+
+  if (!period.start || !period.end) {
+    logStep("WARN: Missing period fields", { hasStart: !!period.start, hasEnd: !!period.end });
+  }
 
   logStep("Upserting subscription data", subscriptionData);
 
