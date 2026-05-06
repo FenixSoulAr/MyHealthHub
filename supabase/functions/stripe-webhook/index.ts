@@ -12,6 +12,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+function getSubscriptionPeriod(subscription: Stripe.Subscription): { start: number | null; end: number | null } {
+  // En 2025-02-24.acacia y posteriores, los campos viven en subscription.items.data[i].
+  // En versiones anteriores estaban en el nivel raíz.
+  // deno-lint-ignore no-explicit-any
+  const item = subscription.items?.data?.[0] as any;
+  // deno-lint-ignore no-explicit-any
+  const subAny = subscription as any;
+  const start = item?.current_period_start ?? subAny.current_period_start ?? null;
+  const end = item?.current_period_end ?? subAny.current_period_end ?? null;
+  return { start, end };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
@@ -186,9 +198,10 @@ async function handleCheckoutCompleted(stripe: Stripe, supabase: any, session: S
 
   // Get subscription details from Stripe
   const subscription = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+  const period = getSubscriptionPeriod(subscription);
   logStep("Retrieved Stripe subscription", { 
     status: subscription.status,
-    currentPeriodEnd: subscription.current_period_end
+    currentPeriodEnd: period.end
   });
 
   // Build subscription data
@@ -199,11 +212,15 @@ async function handleCheckoutCompleted(stripe: Stripe, supabase: any, session: S
     provider: "stripe",
     stripe_customer_id: session.customer as string,
     stripe_subscription_id: stripeSubscriptionId,
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    current_period_start: period.start ? new Date(period.start * 1000).toISOString() : null,
+    current_period_end: period.end ? new Date(period.end * 1000).toISOString() : null,
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
+
+  if (!period.start || !period.end) {
+    logStep("WARN: Missing period fields", { hasStart: !!period.start, hasEnd: !!period.end });
+  }
 
   logStep("Upserting subscription data", subscriptionData);
 
@@ -252,11 +269,12 @@ async function handleSubscriptionUpdated(supabase: any, subscription: Stripe.Sub
     .eq("stripe_price_id", priceId)
     .maybeSingle();
 
+  const period = getSubscriptionPeriod(subscription);
   // deno-lint-ignore no-explicit-any
   const updateData: Record<string, any> = {
     status: mapStripeStatus(subscription.status),
-    current_period_start: new Date(subscription.current_period_start * 1000).toISOString(),
-    current_period_end: new Date(subscription.current_period_end * 1000).toISOString(),
+    current_period_start: period.start ? new Date(period.start * 1000).toISOString() : null,
+    current_period_end: period.end ? new Date(period.end * 1000).toISOString() : null,
     cancel_at_period_end: subscription.cancel_at_period_end,
     updated_at: new Date().toISOString(),
   };
@@ -283,9 +301,8 @@ async function handleSubscriptionDeleted(supabase: any, subscription: Stripe.Sub
 
   // Do NOT delete user data. Downgrade to free at period end.
   // The current_period_end from Stripe tells us when access should actually expire.
-  const periodEnd = subscription.current_period_end
-    ? new Date(subscription.current_period_end * 1000).toISOString()
-    : null;
+  const period = getSubscriptionPeriod(subscription);
+  const periodEnd = period.end ? new Date(period.end * 1000).toISOString() : null;
 
   // Find the free plan to downgrade to
   const { data: freePlan } = await supabase
