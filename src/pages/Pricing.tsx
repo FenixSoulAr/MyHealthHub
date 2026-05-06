@@ -316,10 +316,19 @@ export default function Pricing() {
                         <AlertDialogFooter><AlertDialogCancel>{t.cancelBtn}</AlertDialogCancel><AlertDialogAction onClick={() => schedulePlanChange(plusPlanCode)}>{t.confirmBtn}</AlertDialogAction></AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
-                  ) : (
-                    <Button size="sm" className="w-full text-xs" onClick={() => { isAndroidNative ? startGooglePlayPurchase(plusPlanCode, (!isYearly && isFree) ? "plus-50off-3meses" : undefined) : startCheckout(plusPlanCode); }} disabled={checkoutLoading}>
+                  ) : isAndroidNative ? (
+                    <Button size="sm" className="w-full text-xs" onClick={() => { startGooglePlayPurchase(plusPlanCode, (!isYearly && isFree) ? "plus-50off-3meses" : undefined); }} disabled={checkoutLoading}>
                       {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPlus}
                     </Button>
+                  ) : (
+                    <div className="flex flex-col gap-2">
+                      <Button size="sm" className="w-full text-xs" onClick={() => startPayPalCheckout(plusPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.upgradeToPlus}
+                      </Button>
+                      <Button variant="outline" size="sm" className="w-full text-xs" onClick={() => startStripeCheckout(plusPlanCode)} disabled={checkoutLoading}>
+                        {checkoutLoading ? <Loader2 className="h-3 w-3 mr-1 animate-spin" /> : null}{t.payWithCard}
+                      </Button>
+                    </div>
                   )}
                 </div>
               </td>
