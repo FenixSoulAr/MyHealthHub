@@ -100,6 +100,7 @@ export default function Pricing() {
     youreOnThisPlan:lang === "es" ? "Estás en este plan"   : "You're on this plan",
     upgradeToPlus:  lang === "es" ? "Elegir Plus"          : "Get Plus",
     upgradeToPro:   lang === "es" ? "Elegir Pro"           : "Get Pro",
+    payWithCard:    lang === "es" ? "Pagar con tarjeta"    : "Pay with card",
     perMonth:       lang === "es" ? "/mes"                 : "/month",
     perYear:        lang === "es" ? "/año"                 : "/year",
     forever:        lang === "es" ? "/siempre"             : "/forever",
