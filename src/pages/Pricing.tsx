@@ -55,9 +55,10 @@ function FeatureRow({ label, free, plus, pro, plusHighlight, proHighlight }: {
 
 export default function Pricing() {
   const { isPlus, isPro } = useEntitlementsContext();
-  const { startCheckout, loading: stripeLoading } = usePayPalCheckout();
+  const { startCheckout: startPayPalCheckout, loading: paypalLoading } = usePayPalCheckout();
+  const { startCheckout: startStripeCheckout, loading: stripeLoading } = useStripeCheckout();
   const { startGooglePlayPurchase, loading: gplayLoading } = useGooglePlayCheckout();
-  const checkoutLoading = stripeLoading || gplayLoading;
+  const checkoutLoading = paypalLoading || stripeLoading || gplayLoading;
   const { schedulePlanChange, loading: downgradeLoading } = useDowngradePlan();
   const lang = getLanguage();
   const [searchParams, setSearchParams] = useSearchParams();
