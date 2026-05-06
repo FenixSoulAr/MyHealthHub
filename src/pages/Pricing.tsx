@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/layout/PageHeader";
 import { useEntitlementsContext } from "@/contexts/EntitlementsContext";
 import { getLanguage } from "@/i18n";
 import { usePayPalCheckout } from "@/hooks/usePayPalCheckout";
+import { useStripeCheckout } from "@/hooks/useStripeCheckout";
 import { useDowngradePlan } from "@/hooks/useDowngradePlan";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { useGooglePlayCheckout } from "@/hooks/useGooglePlayCheckout";
