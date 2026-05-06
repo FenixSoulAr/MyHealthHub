@@ -12,6 +12,18 @@ const logStep = (step: string, details?: Record<string, unknown>) => {
   console.log(`[STRIPE-WEBHOOK] ${step}${detailsStr}`);
 };
 
+function getSubscriptionPeriod(subscription: Stripe.Subscription): { start: number | null; end: number | null } {
+  // En 2025-02-24.acacia y posteriores, los campos viven en subscription.items.data[i].
+  // En versiones anteriores estaban en el nivel raíz.
+  // deno-lint-ignore no-explicit-any
+  const item = subscription.items?.data?.[0] as any;
+  // deno-lint-ignore no-explicit-any
+  const subAny = subscription as any;
+  const start = item?.current_period_start ?? subAny.current_period_start ?? null;
+  const end = item?.current_period_end ?? subAny.current_period_end ?? null;
+  return { start, end };
+}
+
 serve(async (req) => {
   if (req.method === "OPTIONS") {
     return new Response(null, { headers: corsHeaders });
