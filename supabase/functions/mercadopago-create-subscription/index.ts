@@ -82,38 +82,69 @@ Deno.serve(async (req) => {
 
     const ts = Date.now();
     const externalReference = `mhh:${userId}:${plan.id}:${ts}`;
-    const amount = (plan.price_cents || 0) / 100;
-    const currency = (plan.currency || "usd").toUpperCase();
+    const rawAmount = (plan.price_cents || 0) / 100;
+    // Mercado Pago test accounts (especially AR) typically only accept ARS for preapproval.
+    // Override currency via env (default ARS in TEST). Amount is kept numeric (NOT cents).
+    const mpCurrency = (Deno.env.get("MERCADOPAGO_CURRENCY") || "ARS").toUpperCase();
+    const transactionAmount = Number(rawAmount.toFixed(2));
+
+    // Allow forcing a MP test buyer email (sandbox) when configured.
+    const testPayerEmail = Deno.env.get("MERCADOPAGO_TEST_PAYER_EMAIL") || undefined;
+    const payerEmail = testPayerEmail || userEmail;
+
     const origin = req.headers.get("origin") || "https://myhealthhub.fenixsoular.com.ar";
     const backUrl = `${origin}/pricing?mp_status=success`;
 
-    // Create preapproval
+    const mpPayload: Record<string, unknown> = {
+      reason: `My Health Hub — ${plan.name}`,
+      external_reference: externalReference,
+      payer_email: payerEmail,
+      back_url: backUrl,
+      auto_recurring: {
+        frequency: freq.value,
+        frequency_type: freq.type,
+        transaction_amount: transactionAmount,
+        currency_id: mpCurrency,
+      },
+      status: "pending",
+    };
+
+    console.log("[mp-create-subscription] payload:", JSON.stringify({
+      ...mpPayload,
+      payer_email: payerEmail ? "***" : null,
+    }));
+
     const mpRes = await fetch(`${MP_API}/preapproval`, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${mpToken}`,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({
-        reason: `My Health Hub — ${plan.name}`,
-        external_reference: externalReference,
-        payer_email: userEmail,
-        back_url: backUrl,
-        auto_recurring: {
-          frequency: freq.value,
-          frequency_type: freq.type,
-          transaction_amount: amount,
-          currency_id: currency,
-        },
-        status: "pending",
-      }),
+      body: JSON.stringify(mpPayload),
     });
 
     const mpJson = await mpRes.json().catch(() => ({}));
     if (!mpRes.ok) {
-      console.error("[mp-create-subscription] MP error:", mpRes.status, mpJson);
+      console.error("[mp-create-subscription] MP error:", mpRes.status, JSON.stringify(mpJson));
+      // Audit failure
+      try {
+        await admin.from("billing_events").insert({
+          provider: "mercadopago",
+          event_type: "preapproval.create_failed",
+          user_id: userId,
+          payload: { request: mpPayload, response: mpJson, http_status: mpRes.status },
+          processed: true,
+          error: mpJson?.message || `HTTP ${mpRes.status}`,
+        });
+      } catch (_) { /* ignore */ }
+
       return new Response(
-        JSON.stringify({ error: "MercadoPago error", details: mpJson?.message || "unknown" }),
+        JSON.stringify({
+          error: "MercadoPago error",
+          status: mpRes.status,
+          message: mpJson?.message || "unknown",
+          cause: mpJson?.cause || mpJson?.error || null,
+        }),
         { status: 502, headers: { ...corsHeaders, "Content-Type": "application/json" } },
       );
     }
