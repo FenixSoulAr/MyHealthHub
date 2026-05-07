@@ -96,8 +96,8 @@ export function PaymentMethodSelectorModal({
       : "Coming soon for customers in Argentina.",
     mpCta: lang === "es" ? "Próximamente" : "Coming soon",
     footer: lang === "es"
-      ? "Pagos web procesados por PayPal o Stripe. Cancelá en cualquier momento."
-      : "Web payments processed by PayPal or Stripe. Cancel anytime.",
+      ? "Pagos web disponibles con PayPal o tarjeta. MercadoPago se incorporará próximamente. Cancelá en cualquier momento."
+      : "Web payments available with PayPal or card. MercadoPago coming soon. Cancel anytime.",
   };
 
   const handlePayPal = () => {
