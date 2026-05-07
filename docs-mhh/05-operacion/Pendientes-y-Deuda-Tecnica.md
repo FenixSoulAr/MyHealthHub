@@ -15,3 +15,11 @@
 - **Lovable Cloud vinculado al repo:** `pwwadvtoabvqvnjkcvjr` (entorno viejo/desalineado, NO productivo para Stripe).
 - **Acción pendiente:**
   - Decidir a futuro si se unifica el entorno productivo a Lovable Cloud o se mantiene Supabase independiente, para evitar la desalineación actual.
+
+## MercadoPago AR (placeholder UI)
+
+- **Contexto:** UX de pricing rediseñada el 2026-05-07 deja MercadoPago visible como "Próximamente" en `PaymentMethodSelectorModal`.
+- **Pendiente:**
+  - Integrar MercadoPago AR como tercer gateway web (hook + edge function + webhook).
+  - Activar la opción en el modal cuando el flujo esté listo.
+  - Mantener Google Play Billing exclusivo en Android nativo.
