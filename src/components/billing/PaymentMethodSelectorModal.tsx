@@ -77,6 +77,7 @@ export function PaymentMethodSelectorModal({
   const lang = getLanguage();
   const { startCheckout: startPayPal, loading: paypalLoading } = usePayPalCheckout();
   const { startCheckout: startStripe, loading: stripeLoading } = useStripeCheckout();
+  const { startCheckout: startMP, loading: mpLoading } = useMercadoPagoCheckout();
 
   const t = {
     title: lang === "es" ? "Elegí tu método de pago" : "Choose your payment method",
@@ -91,14 +92,14 @@ export function PaymentMethodSelectorModal({
       ? "Pagá con tarjeta de crédito o débito de forma segura vía Stripe."
       : "Pay securely with credit or debit card via Stripe.",
     cardCta: lang === "es" ? "Continuar con tarjeta" : "Continue with card",
-    mp: "MercadoPago",
+    mp: "Mercado Pago",
     mpDesc: lang === "es"
-      ? "Disponible próximamente para clientes en Argentina."
-      : "Coming soon for customers in Argentina.",
-    mpCta: lang === "es" ? "Próximamente" : "Coming soon",
+      ? "Pagá con Mercado Pago. Disponible en Argentina y otros países soportados (modo prueba)."
+      : "Pay with Mercado Pago. Available in Argentina and other supported countries (test mode).",
+    mpCta: lang === "es" ? "Continuar con Mercado Pago" : "Continue with Mercado Pago",
     footer: lang === "es"
-      ? "Pagos web disponibles con PayPal o tarjeta. MercadoPago se incorporará próximamente. Cancelá en cualquier momento."
-      : "Web payments available with PayPal or card. MercadoPago coming soon. Cancel anytime.",
+      ? "Pagos web disponibles con PayPal, tarjeta o Mercado Pago. Cancelá en cualquier momento."
+      : "Web payments available with PayPal, card or Mercado Pago. Cancel anytime.",
   };
 
   const handlePayPal = () => {
