@@ -1,6 +1,6 @@
 # Supabase
 
-## Proyectos Supabase — alineación productiva
+## Proyectos Supabase — alineación definitiva
 
 - **Supabase productivo actual de My Health Hub:** `kxkofzxfpqvpojyeguie`
   - Dashboard: https://supabase.com/dashboard/project/kxkofzxfpqvpojyeguie
@@ -13,15 +13,14 @@
   - **No debe apuntarse el endpoint de Stripe a este proyecto.**
 - **Despliegue del webhook a producción (`kxkofzxfpqvpojyeguie`):** se hace manualmente desde el repo con Supabase CLI:
   ```
-  supabase link --project-ref kxkofzxfpqvpojyeguie
-  supabase functions deploy stripe-webhook --no-verify-jwt --project-ref kxkofzxfpqvpojyeguie
+  npx supabase functions deploy stripe-webhook --no-verify-jwt --project-ref kxkofzxfpqvpojyeguie
   ```
   El flag `--no-verify-jwt` es obligatorio porque Stripe no envía Authorization header.
 
 ## Edge Function `stripe-webhook`
 
 - **Incidente relacionado:** F-09 — Stripe webhook devuelve `HTTP 400 Invalid signature` en producción.
-- **Estado:** Diagnóstico/corrección aplicada, pendiente test E2E con cupón fresco.
+- **Estado:** Resuelto. Evento `evt_1TUTaGKDVbPJQ8VfZK1HbBgL` validado con `HTTP 200 OK` el 2026-05-07.
 - **Lectura del request:** El webhook debe leer el body raw con `await req.text()` y no usar `req.json()` antes de validar la firma.
 - **Header requerido:** `stripe-signature`.
 - **Secret:** `STRIPE_WEBHOOK_SECRET` debe obtenerse desde variables de entorno y limpiarse con `.trim()` antes de validar.
