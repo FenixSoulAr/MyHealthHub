@@ -10,4 +10,11 @@
 - En Android nativo, el CTA dispara directamente `useGooglePlayCheckout` por compliance.
 - Tabla comparativa movida a un `Collapsible` secundario.
 
+## Validación del rediseño (2026-05-07)
+
+- El rediseño de Pricing fue validado visualmente en producción.
+- La pantalla ahora presenta cards limpias de planes, estado de plan actual, flujo en dos pasos y selector de método de pago con PayPal, Stripe/tarjeta y MercadoPago como próximo gateway.
+- Stripe Checkout fue probado abriendo correctamente Pro Monthly USD 12.
+- No se realizaron cambios en planes, precios, price IDs ni lógica de billing.
+
 **Compatibilidad preservada:** PayPal LLC, Stripe LLC, Google Play Billing. Planes y price IDs sin cambios.

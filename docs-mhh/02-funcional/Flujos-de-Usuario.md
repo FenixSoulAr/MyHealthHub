@@ -24,3 +24,10 @@
 - Plus/Pro → Free: AlertDialog de confirmación → `schedulePlanChange("free")`.
 - Pro → Plus: AlertDialog de confirmación → `schedulePlanChange(plusPlanCode)`.
 - El plan actual continúa activo hasta el vencimiento.
+
+## Validación del rediseño (2026-05-07)
+
+- El rediseño de Pricing fue validado visualmente en producción.
+- La pantalla ahora presenta cards limpias de planes, estado de plan actual, flujo en dos pasos y selector de método de pago con PayPal, Stripe/tarjeta y MercadoPago como próximo gateway.
+- Stripe Checkout fue probado abriendo correctamente Pro Monthly USD 12.
+- No se realizaron cambios en planes, precios, price IDs ni lógica de billing.

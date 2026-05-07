@@ -12,6 +12,7 @@
 - La tabla comparativa pasó a un `Collapsible` secundario ("Ver comparación completa").
 - Bilingüe ES/EN. Sin cambios en planes, precios ni price IDs.
 - Sin cambios en hooks de checkout: `useStripeCheckout`, `usePayPalCheckout`, `useGooglePlayCheckout` intactos.
+- Validación en producción: cards limpias, flujo en dos pasos funciona correctamente. Stripe Checkout probado abriendo Pro Monthly USD 12. Footer del modal ajustado para mencionar MercadoPago como próximo gateway.
 
 ## 2026-05-07
 
