@@ -91,6 +91,20 @@ Deno.serve(async (req) => {
   const eventType = bodyJson.type || bodyJson.action || qpType || "unknown";
   const dataId = bodyJson?.data?.id || qpId || null;
 
+  const xSignature = req.headers.get("x-signature");
+  const xRequestId = req.headers.get("x-request-id");
+
+  // Verify signature if secret configured
+  let signatureOk = true;
+  let signatureReason: string | undefined;
+  if (webhookSecret) {
+    const result = await verifyMpSignature(webhookSecret, xSignature, xRequestId, dataId ? String(dataId) : null);
+    signatureOk = result.ok;
+    signatureReason = result.reason;
+  } else {
+    signatureReason = "no webhook secret configured";
+  }
+
   // Always log the event first
   const { data: eventRow } = await admin
     .from("billing_events")
@@ -98,13 +112,34 @@ Deno.serve(async (req) => {
       provider: "mercadopago",
       event_type: String(eventType),
       external_id: dataId ? String(dataId) : null,
-      payload: { body: bodyJson, query: Object.fromEntries(url.searchParams) },
+      payload: {
+        body: bodyJson,
+        query: Object.fromEntries(url.searchParams),
+        headers: { "x-signature": xSignature, "x-request-id": xRequestId },
+        signature_ok: signatureOk,
+        signature_reason: signatureReason,
+      },
       processed: false,
     })
     .select("id")
     .single();
 
   const eventId = eventRow?.id;
+
+  // Reject invalid signatures (when secret is configured)
+  if (webhookSecret && !signatureOk) {
+    if (eventId) {
+      await admin
+        .from("billing_events")
+        .update({ processed: true, error: `Invalid signature: ${signatureReason}` })
+        .eq("id", eventId);
+    }
+    console.error("[mp-webhook] Invalid signature:", signatureReason);
+    return new Response(JSON.stringify({ error: "invalid signature" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Only process preapproval-related events
   const isPreapproval =
