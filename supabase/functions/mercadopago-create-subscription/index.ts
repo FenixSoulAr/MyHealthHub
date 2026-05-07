@@ -185,7 +185,7 @@ Deno.serve(async (req) => {
     const preapprovalId = mpJson.id as string;
     const initPoint = (mpJson.init_point || mpJson.sandbox_init_point) as string;
 
-    // Upsert subscription as pending (provider=mercadopago)
+    // Upsert subscription as pending (provider=mercadopago) — store actual charged amount/currency
     await admin.from("subscriptions").insert({
       user_id: userId,
       plan_id: plan.id,
@@ -194,8 +194,9 @@ Deno.serve(async (req) => {
       external_reference: externalReference,
       mercadopago_preapproval_id: preapprovalId,
       payer_email: payerEmail,
+      country_code: countryCode,
       currency: mpCurrency.toLowerCase(),
-      amount_cents: plan.price_cents,
+      amount_cents: Math.round(transactionAmount * 100),
       billing_frequency: freq.freq,
       raw_payload: mpJson,
     });
