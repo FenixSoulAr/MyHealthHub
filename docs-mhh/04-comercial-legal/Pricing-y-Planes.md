@@ -18,4 +18,6 @@
 - La pantalla `Pricing` separa la decisión en dos pasos: (1) elegir plan, (2) elegir medio de pago.
 - Web/PWA: el modal `PaymentMethodSelectorModal` ofrece PayPal, Stripe (tarjeta) y MercadoPago como "Próximamente" (sin funcionalidad activa).
 - Android nativo: el CTA del plan dispara directamente Google Play Billing; no se muestra el selector web.
+- Footer del modal actualizado: "Pagos web disponibles con PayPal o tarjeta. MercadoPago se incorporará próximamente."
 - Sin cambios en planes, precios ni price IDs. Sin cambios en lógica comercial ni en hooks de checkout.
+- Validación en producción: Stripe Checkout probado correctamente para Pro Monthly USD 12.
