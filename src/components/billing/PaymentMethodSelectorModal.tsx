@@ -110,6 +110,10 @@ export function PaymentMethodSelectorModal({
     if (!planCode) return;
     startStripe(planCode);
   };
+  const handleMP = () => {
+    if (!planCode) return;
+    startMP(planCode);
+  };
 
   return (
     <ResponsiveFormModal
