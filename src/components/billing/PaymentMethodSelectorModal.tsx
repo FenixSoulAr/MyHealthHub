@@ -158,7 +158,8 @@ export function PaymentMethodSelectorModal({
             description={t.mpDesc}
             icon={<span className="font-bold text-sm">MP</span>}
             ctaLabel={t.mpCta}
-            comingSoon
+            onClick={handleMP}
+            loading={mpLoading}
           />
         </div>
 
