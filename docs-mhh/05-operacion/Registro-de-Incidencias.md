@@ -24,3 +24,10 @@
   - Se agregan logs diagnósticos no sensibles: existencia y longitud del header, longitud del body, longitud del secret y mensaje/tipo de error.
 - **Protección:** No se registran secrets, tokens, claves privadas ni contenido del body.
 - **Próximo paso:** Ejecutar test E2E con cupón fresco, por ejemplo `MHHQA300`.
+
+### Aclaración de entornos (2026-05-07)
+
+- El Supabase productivo actual de My Health Hub es `kxkofzxfpqvpojyeguie`. Endpoint productivo del webhook: `https://kxkofzxfpqvpojyeguie.supabase.co/functions/v1/stripe-webhook`.
+- El proyecto Lovable Cloud vinculado al repo (`pwwadvtoabvqvnjkcvjr`) corresponde a un entorno viejo / desalineado y NO debe usarse para diagnosticar Stripe productivo ni para apuntar el endpoint de Stripe.
+- Lovable no tiene acceso directo a `kxkofzxfpqvpojyeguie`: la verificación de logs, secrets y el despliegue de la edge function deben hacerse manualmente desde su Dashboard o con Supabase CLI (`--project-ref kxkofzxfpqvpojyeguie`, `--no-verify-jwt`).
+- Evento de referencia que falló con HTTP 400 en `kxkofzxfpqvpojyeguie`: `evt_1TUTaGKDVbPJQ8VfZK1HbBgL` (2026-05-07 12:11:29 -03). Pendiente: confirmar si la versión F-09 del código está realmente desplegada en ese proyecto y si `STRIPE_WEBHOOK_SECRET` ahí coincide con el signing secret del endpoint productivo en Stripe.
