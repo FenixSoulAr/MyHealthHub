@@ -21,6 +21,7 @@ export interface PricingPlanCardProps {
   savingsLabel?: string;
   highlighted?: boolean;
   secondaryCta?: React.ReactNode;
+  hidePrimaryCta?: boolean;
 }
 
 export function PricingPlanCard({
@@ -41,6 +42,7 @@ export function PricingPlanCard({
   savingsLabel,
   highlighted,
   secondaryCta,
+  hidePrimaryCta,
 }: PricingPlanCardProps) {
   const isFeatured = popular || highlighted;
   return (
@@ -98,15 +100,17 @@ export function PricingPlanCard({
 
       {/* CTA */}
       <div className="mt-6 space-y-2">
-        <Button
-          className="w-full"
-          variant={ctaVariant}
-          disabled={ctaDisabled || ctaLoading}
-          onClick={onCtaClick}
-        >
-          {ctaLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
-          {ctaLabel}
-        </Button>
+        {!hidePrimaryCta && (
+          <Button
+            className="w-full"
+            variant={ctaVariant}
+            disabled={ctaDisabled || ctaLoading}
+            onClick={onCtaClick}
+          >
+            {ctaLoading ? <Loader2 className="h-4 w-4 mr-2 animate-spin" /> : null}
+            {ctaLabel}
+          </Button>
+        )}
         {secondaryCta}
       </div>
     </div>
