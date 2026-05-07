@@ -12,3 +12,10 @@
 
 - La corrección se limitó al webhook de Stripe y no cambia la arquitectura comercial vigente.
 - Estado: Resuelto. Webhook validado con `HTTP 200 OK` el 2026-05-07; Stripe LLC queda operativo como alternativa web.
+
+## UX de selección de plan y medio de pago (2026-05-07)
+
+- La pantalla `Pricing` separa la decisión en dos pasos: (1) elegir plan, (2) elegir medio de pago.
+- Web/PWA: el modal `PaymentMethodSelectorModal` ofrece PayPal, Stripe (tarjeta) y MercadoPago como "Próximamente" (sin funcionalidad activa).
+- Android nativo: el CTA del plan dispara directamente Google Play Billing; no se muestra el selector web.
+- Sin cambios en planes, precios ni price IDs. Sin cambios en lógica comercial ni en hooks de checkout.
