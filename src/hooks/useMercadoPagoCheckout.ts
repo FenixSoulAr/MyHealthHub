@@ -37,12 +37,22 @@ export function useMercadoPagoCheckout() {
         body: { plan_code: planCode },
       });
       if (error) {
-        console.error("[useMercadoPagoCheckout] error:", error);
+        console.error("[useMercadoPagoCheckout] invoke error:", error, "context:", (error as any)?.context);
+        try {
+          const ctx = (error as any)?.context;
+          if (ctx?.json) console.error("[useMercadoPagoCheckout] MP details:", await ctx.json());
+        } catch (_) {}
+        toast.error(messages.error);
+        return;
+      }
+      if ((data as any)?.error) {
+        console.error("[useMercadoPagoCheckout] MP error payload:", data);
         toast.error(messages.error);
         return;
       }
       const initPoint = (data as any)?.init_point;
       if (!initPoint) {
+        console.error("[useMercadoPagoCheckout] missing init_point:", data);
         toast.error(messages.error);
         return;
       }
