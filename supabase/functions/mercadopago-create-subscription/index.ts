@@ -82,11 +82,37 @@ Deno.serve(async (req) => {
 
     const ts = Date.now();
     const externalReference = `mhh:${userId}:${plan.id}:${ts}`;
-    const rawAmount = (plan.price_cents || 0) / 100;
-    // Mercado Pago test accounts (especially AR) typically only accept ARS for preapproval.
-    // Override currency via env (default ARS in TEST). Amount is kept numeric (NOT cents).
+
+    // Resolve localized price for Mercado Pago (provider/country/currency-specific).
+    // Default country = AR (only market currently supported via MP). Overridable via env.
+    const countryCode = (Deno.env.get("MERCADOPAGO_COUNTRY") || "AR").toUpperCase();
     const mpCurrency = (Deno.env.get("MERCADOPAGO_CURRENCY") || "ARS").toUpperCase();
-    const transactionAmount = Number(rawAmount.toFixed(2));
+
+    const { data: localized, error: localizedErr } = await admin
+      .from("localized_plan_prices")
+      .select("amount, currency_id, country_code, billing_period")
+      .eq("provider", "mercadopago")
+      .eq("country_code", countryCode)
+      .eq("currency_id", mpCurrency)
+      .eq("plan_id", plan.id)
+      .eq("billing_period", freq.freq)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (localizedErr || !localized) {
+      console.error("[mp-create-subscription] No localized price for", {
+        provider: "mercadopago", countryCode, mpCurrency, plan_code: planCode, billing_period: freq.freq,
+      }, localizedErr);
+      return new Response(
+        JSON.stringify({
+          error: "Localized price not configured",
+          message: `No price for ${planCode} in ${countryCode}/${mpCurrency} via mercadopago`,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const transactionAmount = Number(Number(localized.amount).toFixed(2));
 
     // Allow forcing a MP test buyer email (sandbox) when configured.
     const testPayerEmail = Deno.env.get("MERCADOPAGO_TEST_PAYER_EMAIL") || undefined;
