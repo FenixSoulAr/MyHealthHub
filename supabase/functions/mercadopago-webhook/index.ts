@@ -24,12 +24,55 @@ function mapStatus(mpStatus: string): string {
   }
 }
 
+async function verifyMpSignature(
+  secret: string,
+  xSignature: string | null,
+  xRequestId: string | null,
+  dataId: string | null,
+): Promise<{ ok: boolean; reason?: string }> {
+  if (!xSignature) return { ok: false, reason: "missing x-signature" };
+  if (!dataId) return { ok: false, reason: "missing data.id" };
+
+  const parts = Object.fromEntries(
+    xSignature.split(",").map((p) => {
+      const [k, ...rest] = p.trim().split("=");
+      return [k.trim(), rest.join("=").trim()];
+    }),
+  );
+  const ts = parts["ts"];
+  const v1 = parts["v1"];
+  if (!ts || !v1) return { ok: false, reason: "malformed x-signature" };
+
+  // Manifest per MP docs:
+  // id:<data.id>;request-id:<x-request-id>;ts:<ts>;
+  const manifest =
+    `id:${dataId};` +
+    (xRequestId ? `request-id:${xRequestId};` : "") +
+    `ts:${ts};`;
+
+  const enc = new TextEncoder();
+  const key = await crypto.subtle.importKey(
+    "raw",
+    enc.encode(secret),
+    { name: "HMAC", hash: "SHA-256" },
+    false,
+    ["sign"],
+  );
+  const sig = await crypto.subtle.sign("HMAC", key, enc.encode(manifest));
+  const hex = Array.from(new Uint8Array(sig))
+    .map((b) => b.toString(16).padStart(2, "0"))
+    .join("");
+
+  return hex === v1 ? { ok: true } : { ok: false, reason: "signature mismatch" };
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") return new Response(null, { headers: corsHeaders });
 
   const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
   const serviceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
   const mpToken = Deno.env.get("MERCADOPAGO_ACCESS_TOKEN_TEST");
+  const webhookSecret = Deno.env.get("MERCADOPAGO_WEBHOOK_SECRET");
   const admin = createClient(supabaseUrl, serviceKey);
 
   let bodyJson: any = {};
@@ -48,6 +91,20 @@ Deno.serve(async (req) => {
   const eventType = bodyJson.type || bodyJson.action || qpType || "unknown";
   const dataId = bodyJson?.data?.id || qpId || null;
 
+  const xSignature = req.headers.get("x-signature");
+  const xRequestId = req.headers.get("x-request-id");
+
+  // Verify signature if secret configured
+  let signatureOk = true;
+  let signatureReason: string | undefined;
+  if (webhookSecret) {
+    const result = await verifyMpSignature(webhookSecret, xSignature, xRequestId, dataId ? String(dataId) : null);
+    signatureOk = result.ok;
+    signatureReason = result.reason;
+  } else {
+    signatureReason = "no webhook secret configured";
+  }
+
   // Always log the event first
   const { data: eventRow } = await admin
     .from("billing_events")
@@ -55,13 +112,34 @@ Deno.serve(async (req) => {
       provider: "mercadopago",
       event_type: String(eventType),
       external_id: dataId ? String(dataId) : null,
-      payload: { body: bodyJson, query: Object.fromEntries(url.searchParams) },
+      payload: {
+        body: bodyJson,
+        query: Object.fromEntries(url.searchParams),
+        headers: { "x-signature": xSignature, "x-request-id": xRequestId },
+        signature_ok: signatureOk,
+        signature_reason: signatureReason,
+      },
       processed: false,
     })
     .select("id")
     .single();
 
   const eventId = eventRow?.id;
+
+  // Reject invalid signatures (when secret is configured)
+  if (webhookSecret && !signatureOk) {
+    if (eventId) {
+      await admin
+        .from("billing_events")
+        .update({ processed: true, error: `Invalid signature: ${signatureReason}` })
+        .eq("id", eventId);
+    }
+    console.error("[mp-webhook] Invalid signature:", signatureReason);
+    return new Response(JSON.stringify({ error: "invalid signature" }), {
+      status: 401,
+      headers: { ...corsHeaders, "Content-Type": "application/json" },
+    });
+  }
 
   // Only process preapproval-related events
   const isPreapproval =
