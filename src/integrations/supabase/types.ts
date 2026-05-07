@@ -572,6 +572,53 @@ export type Database = {
           },
         ]
       }
+      localized_plan_prices: {
+        Row: {
+          amount: number
+          billing_period: string
+          country_code: string
+          created_at: string
+          currency_id: string
+          id: string
+          is_active: boolean
+          plan_id: string
+          provider: string
+          updated_at: string
+        }
+        Insert: {
+          amount: number
+          billing_period: string
+          country_code: string
+          created_at?: string
+          currency_id: string
+          id?: string
+          is_active?: boolean
+          plan_id: string
+          provider: string
+          updated_at?: string
+        }
+        Update: {
+          amount?: number
+          billing_period?: string
+          country_code?: string
+          created_at?: string
+          currency_id?: string
+          id?: string
+          is_active?: boolean
+          plan_id?: string
+          provider?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "localized_plan_prices_plan_id_fkey"
+            columns: ["plan_id"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       medication_logs: {
         Row: {
           created_at: string | null
@@ -1146,6 +1193,7 @@ export type Database = {
           billing_frequency: string | null
           cancel_at_period_end: boolean
           cancelled_at: string | null
+          country_code: string | null
           created_at: string
           currency: string | null
           current_period_end: string | null
@@ -1175,6 +1223,7 @@ export type Database = {
           billing_frequency?: string | null
           cancel_at_period_end?: boolean
           cancelled_at?: string | null
+          country_code?: string | null
           created_at?: string
           currency?: string | null
           current_period_end?: string | null
@@ -1204,6 +1253,7 @@ export type Database = {
           billing_frequency?: string | null
           cancel_at_period_end?: boolean
           cancelled_at?: string | null
+          country_code?: string | null
           created_at?: string
           currency?: string | null
           current_period_end?: string | null

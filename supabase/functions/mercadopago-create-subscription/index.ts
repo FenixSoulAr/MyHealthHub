@@ -82,11 +82,37 @@ Deno.serve(async (req) => {
 
     const ts = Date.now();
     const externalReference = `mhh:${userId}:${plan.id}:${ts}`;
-    const rawAmount = (plan.price_cents || 0) / 100;
-    // Mercado Pago test accounts (especially AR) typically only accept ARS for preapproval.
-    // Override currency via env (default ARS in TEST). Amount is kept numeric (NOT cents).
+
+    // Resolve localized price for Mercado Pago (provider/country/currency-specific).
+    // Default country = AR (only market currently supported via MP). Overridable via env.
+    const countryCode = (Deno.env.get("MERCADOPAGO_COUNTRY") || "AR").toUpperCase();
     const mpCurrency = (Deno.env.get("MERCADOPAGO_CURRENCY") || "ARS").toUpperCase();
-    const transactionAmount = Number(rawAmount.toFixed(2));
+
+    const { data: localized, error: localizedErr } = await admin
+      .from("localized_plan_prices")
+      .select("amount, currency_id, country_code, billing_period")
+      .eq("provider", "mercadopago")
+      .eq("country_code", countryCode)
+      .eq("currency_id", mpCurrency)
+      .eq("plan_id", plan.id)
+      .eq("billing_period", freq.freq)
+      .eq("is_active", true)
+      .maybeSingle();
+
+    if (localizedErr || !localized) {
+      console.error("[mp-create-subscription] No localized price for", {
+        provider: "mercadopago", countryCode, mpCurrency, plan_code: planCode, billing_period: freq.freq,
+      }, localizedErr);
+      return new Response(
+        JSON.stringify({
+          error: "Localized price not configured",
+          message: `No price for ${planCode} in ${countryCode}/${mpCurrency} via mercadopago`,
+        }),
+        { status: 422, headers: { ...corsHeaders, "Content-Type": "application/json" } },
+      );
+    }
+
+    const transactionAmount = Number(Number(localized.amount).toFixed(2));
 
     // Allow forcing a MP test buyer email (sandbox) when configured.
     const testPayerEmail = Deno.env.get("MERCADOPAGO_TEST_PAYER_EMAIL") || undefined;
@@ -109,9 +135,16 @@ Deno.serve(async (req) => {
       status: "pending",
     };
 
-    console.log("[mp-create-subscription] payload:", JSON.stringify({
-      ...mpPayload,
-      payer_email: payerEmail ? "***" : null,
+    console.log("[mp-create-subscription] preapproval request:", JSON.stringify({
+      provider: "mercadopago",
+      country_code: countryCode,
+      plan_id: plan.id,
+      plan_code: planCode,
+      billing_period: freq.freq,
+      currency_id: mpCurrency,
+      transaction_amount: transactionAmount,
+      external_reference: externalReference,
+      payer_email_present: !!payerEmail,
     }));
 
     const mpRes = await fetch(`${MP_API}/preapproval`, {
@@ -152,7 +185,7 @@ Deno.serve(async (req) => {
     const preapprovalId = mpJson.id as string;
     const initPoint = (mpJson.init_point || mpJson.sandbox_init_point) as string;
 
-    // Upsert subscription as pending (provider=mercadopago)
+    // Upsert subscription as pending (provider=mercadopago) — store actual charged amount/currency
     await admin.from("subscriptions").insert({
       user_id: userId,
       plan_id: plan.id,
@@ -161,8 +194,9 @@ Deno.serve(async (req) => {
       external_reference: externalReference,
       mercadopago_preapproval_id: preapprovalId,
       payer_email: payerEmail,
+      country_code: countryCode,
       currency: mpCurrency.toLowerCase(),
-      amount_cents: plan.price_cents,
+      amount_cents: Math.round(transactionAmount * 100),
       billing_frequency: freq.freq,
       raw_payload: mpJson,
     });
