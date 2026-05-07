@@ -135,9 +135,16 @@ Deno.serve(async (req) => {
       status: "pending",
     };
 
-    console.log("[mp-create-subscription] payload:", JSON.stringify({
-      ...mpPayload,
-      payer_email: payerEmail ? "***" : null,
+    console.log("[mp-create-subscription] preapproval request:", JSON.stringify({
+      provider: "mercadopago",
+      country_code: countryCode,
+      plan_id: plan.id,
+      plan_code: planCode,
+      billing_period: freq.freq,
+      currency_id: mpCurrency,
+      transaction_amount: transactionAmount,
+      external_reference: externalReference,
+      payer_email_present: !!payerEmail,
     }));
 
     const mpRes = await fetch(`${MP_API}/preapproval`, {
