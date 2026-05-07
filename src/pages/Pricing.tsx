@@ -186,20 +186,17 @@ export default function Pricing() {
           periodLabel={t.forever}
           description={t.descFree}
           features={featuresFree}
-          ctaLabel={freeCtaLabel}
+          ctaLabel={t.youAreOn}
           ctaVariant="outline"
-          ctaDisabled={freeCtaDisabled || downgradeLoading}
+          ctaDisabled
           current={freeIsCurrent}
           currentLabel={t.current}
-          onCtaClick={() => {
-            if (freeCtaDisabled) return;
-            // downgrade flow handled via AlertDialog below; trigger programmatically
-          }}
+          hidePrimaryCta={!freeIsCurrent}
           secondaryCta={
             !freeIsCurrent ? (
               <AlertDialog>
                 <AlertDialogTrigger asChild>
-                  <Button variant="ghost" size="sm" className="w-full text-xs" disabled={downgradeLoading}>
+                  <Button variant="outline" size="sm" className="w-full" disabled={downgradeLoading}>
                     {t.chooseFree}
                   </Button>
                 </AlertDialogTrigger>
