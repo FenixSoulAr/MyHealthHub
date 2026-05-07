@@ -1,5 +1,23 @@
 # Supabase
 
+## Proyectos Supabase — alineación productiva
+
+- **Supabase productivo actual de My Health Hub:** `kxkofzxfpqvpojyeguie`
+  - Dashboard: https://supabase.com/dashboard/project/kxkofzxfpqvpojyeguie
+  - Endpoint productivo del webhook Stripe: `https://kxkofzxfpqvpojyeguie.supabase.co/functions/v1/stripe-webhook`
+  - Es el proyecto que recibe los eventos reales de Stripe en producción.
+  - **Lovable NO tiene acceso directo a este proyecto.** Cualquier verificación de logs, secrets, despliegue de edge functions o queries debe hacerse manualmente desde su Supabase Dashboard o vía Supabase CLI con `--project-ref kxkofzxfpqvpojyeguie`.
+- **Proyecto Lovable Cloud vinculado al repo:** `pwwadvtoabvqvnjkcvjr`
+  - Corresponde a un entorno viejo / desalineado respecto del Supabase productivo independiente.
+  - **No debe usarse para diagnosticar Stripe productivo.**
+  - **No debe apuntarse el endpoint de Stripe a este proyecto.**
+- **Despliegue del webhook a producción (`kxkofzxfpqvpojyeguie`):** se hace manualmente desde el repo con Supabase CLI:
+  ```
+  supabase link --project-ref kxkofzxfpqvpojyeguie
+  supabase functions deploy stripe-webhook --no-verify-jwt --project-ref kxkofzxfpqvpojyeguie
+  ```
+  El flag `--no-verify-jwt` es obligatorio porque Stripe no envía Authorization header.
+
 ## Edge Function `stripe-webhook`
 
 - **Incidente relacionado:** F-09 — Stripe webhook devuelve `HTTP 400 Invalid signature` en producción.
