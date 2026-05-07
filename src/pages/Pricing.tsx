@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { ChevronDown } from "lucide-react";
+import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
 import { PageHeader } from "@/components/layout/PageHeader";
 import { useEntitlementsContext } from "@/contexts/EntitlementsContext";
@@ -58,6 +59,29 @@ export default function Pricing() {
   useEffect(() => {
     if (billingParam === "yearly" || billingParam === "monthly") setInterval(billingParam);
   }, [billingParam]);
+
+  // Mercado Pago return status
+  useEffect(() => {
+    const mp = searchParams.get("mp_status");
+    if (!mp) return;
+    if (mp === "success") {
+      toast.success(lang === "es"
+        ? "Pago iniciado. Activaremos tu plan en cuanto Mercado Pago lo confirme."
+        : "Payment started. Your plan will be activated once Mercado Pago confirms it.");
+    } else if (mp === "pending") {
+      toast.info(lang === "es"
+        ? "Tu pago está pendiente de confirmación por Mercado Pago."
+        : "Your payment is pending Mercado Pago confirmation.");
+    } else if (mp === "failure") {
+      toast.error(lang === "es"
+        ? "El pago no se completó. Podés intentarlo nuevamente."
+        : "The payment was not completed. You can try again.");
+    }
+    const next = new URLSearchParams(searchParams);
+    next.delete("mp_status");
+    setSearchParams(next, { replace: true });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const isYearly = interval === "yearly";
   const isFree = !isPlus && !isPro;

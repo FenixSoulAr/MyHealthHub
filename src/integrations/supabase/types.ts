@@ -159,6 +159,53 @@ export type Database = {
         }
         Relationships: []
       }
+      billing_events: {
+        Row: {
+          created_at: string
+          error: string | null
+          event_type: string | null
+          external_id: string | null
+          id: string
+          payload: Json
+          processed: boolean
+          provider: string
+          subscription_id: string | null
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          provider: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          error?: string | null
+          event_type?: string | null
+          external_id?: string | null
+          id?: string
+          payload?: Json
+          processed?: boolean
+          provider?: string
+          subscription_id?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "billing_events_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       diagnoses: {
         Row: {
           condition: string
@@ -1095,18 +1142,28 @@ export type Database = {
       }
       subscriptions: {
         Row: {
+          amount_cents: number | null
+          billing_frequency: string | null
           cancel_at_period_end: boolean
+          cancelled_at: string | null
           created_at: string
+          currency: string | null
           current_period_end: string | null
           current_period_start: string | null
           default_payment_method_last4: string | null
+          external_reference: string | null
           id: string
           last_verified_at: string | null
+          mercadopago_preapproval_id: string | null
+          next_payment_date: string | null
+          payer_email: string | null
           pending_plan_code: string | null
           plan_id: string
           provider: string
           provider_product_id: string | null
           provider_subscription_id: string | null
+          raw_payload: Json | null
+          started_at: string | null
           status: string
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -1114,18 +1171,28 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          amount_cents?: number | null
+          billing_frequency?: string | null
           cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string
+          currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           default_payment_method_last4?: string | null
+          external_reference?: string | null
           id?: string
           last_verified_at?: string | null
+          mercadopago_preapproval_id?: string | null
+          next_payment_date?: string | null
+          payer_email?: string | null
           pending_plan_code?: string | null
           plan_id: string
           provider?: string
           provider_product_id?: string | null
           provider_subscription_id?: string | null
+          raw_payload?: Json | null
+          started_at?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -1133,18 +1200,28 @@ export type Database = {
           user_id: string
         }
         Update: {
+          amount_cents?: number | null
+          billing_frequency?: string | null
           cancel_at_period_end?: boolean
+          cancelled_at?: string | null
           created_at?: string
+          currency?: string | null
           current_period_end?: string | null
           current_period_start?: string | null
           default_payment_method_last4?: string | null
+          external_reference?: string | null
           id?: string
           last_verified_at?: string | null
+          mercadopago_preapproval_id?: string | null
+          next_payment_date?: string | null
+          payer_email?: string | null
           pending_plan_code?: string | null
           plan_id?: string
           provider?: string
           provider_product_id?: string | null
           provider_subscription_id?: string | null
+          raw_payload?: Json | null
+          started_at?: string | null
           status?: string
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
