@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { getLanguage } from "@/i18n";
 import { usePayPalCheckout } from "@/hooks/usePayPalCheckout";
 import { useStripeCheckout } from "@/hooks/useStripeCheckout";
+import { useMercadoPagoCheckout } from "@/hooks/useMercadoPagoCheckout";
 
 interface PaymentMethodSelectorModalProps {
   open: boolean;
