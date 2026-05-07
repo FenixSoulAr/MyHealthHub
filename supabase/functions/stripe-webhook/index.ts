@@ -30,7 +30,7 @@ serve(async (req) => {
   }
 
   const stripeKey = Deno.env.get("STRIPE_SECRET_KEY");
-  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET");
+  const webhookSecret = Deno.env.get("STRIPE_WEBHOOK_SECRET")?.trim();
   const supabaseUrl = Deno.env.get("SUPABASE_URL");
   const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
 
@@ -54,7 +54,9 @@ serve(async (req) => {
 
     logStep("=== WEBHOOK REQUEST RECEIVED ===", { 
       hasSignature: !!signature,
+      signatureLength: signature?.length ?? 0,
       bodyLength: body.length,
+      secretLength: webhookSecret.length,
       timestamp: new Date().toISOString()
     });
 
@@ -69,11 +71,18 @@ serve(async (req) => {
     // Verify webhook signature
     let event: Stripe.Event;
     try {
-      event = stripe.webhooks.constructEvent(body, signature, webhookSecret);
+      event = await stripe.webhooks.constructEventAsync(body, signature, webhookSecret);
       logStep("Signature verified successfully");
     } catch (err: unknown) {
       const message = err instanceof Error ? err.message : "Unknown error";
-      logStep("ERROR: Invalid signature", { error: message });
+      logStep("ERROR: Invalid signature", {
+        hasSignature: !!signature,
+        signatureLength: signature.length,
+        bodyLength: body.length,
+        secretLength: webhookSecret.length,
+        errorType: err instanceof Error ? err.name : typeof err,
+        errorMessage: message,
+      });
       return new Response(JSON.stringify({ error: "Invalid signature" }), {
         status: 400,
         headers: { ...corsHeaders, "Content-Type": "application/json" },
