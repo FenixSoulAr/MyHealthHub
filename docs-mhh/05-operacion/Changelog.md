@@ -1,5 +1,18 @@
 # Changelog
 
+## 2026-05-07 — UX Pricing
+
+### UX/UI
+
+- Rediseño completo de `src/pages/Pricing.tsx` con look premium minimal.
+- Nuevos componentes: `PricingPlanCard`, `PricingComparison`, `PaymentMethodSelectorModal`.
+- Flujo en dos pasos: el usuario primero elige el plan y luego selecciona el medio de pago.
+- En web/PWA, el modal de pago ofrece PayPal, Tarjeta (Stripe) y MercadoPago como "Próximamente" (placeholder, sin lógica).
+- En Android nativo se conserva Google Play Billing exclusivo (sin selector web).
+- La tabla comparativa pasó a un `Collapsible` secundario ("Ver comparación completa").
+- Bilingüe ES/EN. Sin cambios en planes, precios ni price IDs.
+- Sin cambios en hooks de checkout: `useStripeCheckout`, `usePayPalCheckout`, `useGooglePlayCheckout` intactos.
+
 ## 2026-05-07
 
 ### Fix
